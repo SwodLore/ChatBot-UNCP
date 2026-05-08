@@ -21,7 +21,7 @@ Chatbot RAG (Retrieval-Augmented Generation) para la **Universidad Nacional del 
 **Paso 1 — Clonar y configurar**
 
 ```bash
-git clone https://github.com/TU_USUARIO/chatbot-uncp.git
+git clone https://github.com/SwodLore/ChatBot-UNCP.git
 cd chatbot-uncp
 cp .env.example .env
 ```
@@ -198,26 +198,6 @@ Todas las variables se configuran en `.env` (copiar desde `.env.example`).
 
 Documentación interactiva completa en http://localhost:8000/docs
 
----
-
-## Arquitectura RAG
-
-```
-Documento PDF/DOCX/XLSX
-    → Extracción de texto (pdfplumber / python-docx / openpyxl)
-    → OCR automático si la página está escaneada (Tesseract + español)
-    → Parent-Child Chunking (hijo 400 chars para embeddings, padre 1600 chars para LLM)
-    → sentence-transformers paraphrase-multilingual-mpnet-base-v2 (embeddings)
-    → ChromaDB (vectores persistentes)
-
-Consulta del estudiante
-    → Clasificación de intento (calendario / matrícula / tarifario / reglamento / grados)
-    → Filtro semántico en ChromaDB por categoría del documento
-    → Retrieval top-20 chunks + Cross-Encoder reranking → top-8
-    → Historial de conversación (últimos 6 mensajes desde SQLite)
-    → Prompt con contexto + historial → Gemini 2.0 Flash / LLaMA 3.1
-    → Respuesta en streaming SSE → frontend React
-```
 
 ---
 
@@ -236,28 +216,6 @@ OLLAMA_MODEL=llama3.1:8b
 ```
 
 Solo se cambia `.env` — no se toca ningún archivo de código.
-
----
-
-## Evaluación con RAGAs
-
-El sistema incluye evaluación sistemática de calidad RAG con 4 métricas:
-
-- **Faithfulness** — el LLM no alucina, solo afirma lo que está en el contexto
-- **Answer Relevancy** — la respuesta responde exactamente lo que se preguntó
-- **Context Recall** — el retrieval encontró toda la información necesaria
-- **Context Precision** — el contexto recuperado no contiene ruido innecesario
-
-```bash
-# 1. Completar preguntas y respuestas esperadas en:
-#    backend/evaluation/test_dataset.json
-
-# 2. Correr evaluación (tarda ~1-2 min por cada 10 preguntas)
-docker compose exec backend python evaluate.py
-
-# Los resultados se guardan en backend/evaluation/results/
-# como JSON (detalle completo) y CSV (abrir en Excel)
-```
 
 ---
 
