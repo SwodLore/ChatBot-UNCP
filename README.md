@@ -2,8 +2,6 @@
 
 Chatbot RAG (Retrieval-Augmented Generation) para la **Universidad Nacional del Centro del Perú**. Permite a los estudiantes consultar información administrativa (trámites, requisitos, calendario académico, tarifarios, reglamentos) 24/7, basándose en documentos PDF institucionales oficiales.
 
-> Proyecto de tesis — Ingeniería de Sistemas, UNCP, Huancayo 2026.
-
 ---
 
 ## Inicio rápido
