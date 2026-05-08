@@ -1,0 +1,32 @@
+# ── Entorno ───────────────────────────────────────────────────────────────────
+.env
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# ── SQLite (generado en runtime) ──────────────────────────────────────────────
+backend/chatbot.db
+backend/chatbot.db-shm
+backend/chatbot.db-wal
+
+# ── Documentos PDF (agregar manualmente, no van en git) ───────────────────────
+# backend/documents/*
+# !backend/documents/.gitkeep
+
+# ── Resultados de evaluación RAGAs (generados) ────────────────────────────────
+backend/evaluation/results/
+
+# ── Frontend ──────────────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+
+# ── Docker / OS ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.log

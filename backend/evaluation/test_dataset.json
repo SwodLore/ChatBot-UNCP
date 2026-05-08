@@ -1,0 +1,139 @@
+[
+  {
+    "_instrucciones": "CÓMO COMPLETAR ESTE ARCHIVO",
+    "_campo_pregunta": "Escribe la pregunta exactamente como la haría un estudiante UNCP.",
+    "_campo_respuesta_esperada": "Copia la respuesta CORRECTA directamente del documento PDF oficial.",
+    "_nota": "Mínimo recomendado para la tesis: 30 preguntas. Elimina este objeto _instrucciones antes de correr evaluate.py.",
+    "_categorias": "Cubre las 5 categorías: calendario, matrícula, tarifario, grados, adesa"
+  },
+
+  {
+    "_categoria": "calendario",
+    "pregunta": "¿Cuándo inicia el periodo lectivo 2026-II?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí la fecha exacta del Calendario Académico UNCP 2026."
+  },
+  {
+    "_categoria": "calendario",
+    "pregunta": "¿Cuándo finaliza el periodo lectivo 2026-I?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí la fecha de fin de semestre del Calendario Académico."
+  },
+  {
+    "_categoria": "calendario",
+    "pregunta": "¿En qué fechas son las vacaciones de medio año 2026?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí las fechas de vacaciones del Calendario Académico."
+  },
+  {
+    "_categoria": "calendario",
+    "pregunta": "¿Cuándo es el proceso de matrícula para el semestre 2026-II?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí las fechas del proceso de matrícula del Calendario."
+  },
+  {
+    "_categoria": "calendario",
+    "pregunta": "¿Cuándo inician las clases del semestre 2026-I?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí la fecha de inicio de clases del Calendario Académico."
+  },
+
+  {
+    "_categoria": "matricula",
+    "pregunta": "¿Cuáles son los requisitos para la matrícula regular?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí los requisitos del Reglamento de Matrícula UNCP."
+  },
+  {
+    "_categoria": "matricula",
+    "pregunta": "¿Qué documentos necesito para matricularme por primera vez?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí los documentos requeridos del Reglamento de Matrícula."
+  },
+  {
+    "_categoria": "matricula",
+    "pregunta": "¿Cómo se realiza la matrícula extemporánea?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí el procedimiento del Reglamento de Matrícula UNCP."
+  },
+  {
+    "_categoria": "matricula",
+    "pregunta": "¿Cuántos créditos puedo matricular por semestre?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí el límite de créditos del Reglamento de Matrícula."
+  },
+  {
+    "_categoria": "matricula",
+    "pregunta": "¿Qué pasa si no me matriculo en las fechas establecidas?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí las consecuencias del Reglamento de Matrícula UNCP."
+  },
+
+  {
+    "_categoria": "tarifario",
+    "pregunta": "¿Cuánto cuesta la constancia de estudios en la UNCP?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí el monto exacto del Tarifario de Trámites UNCP."
+  },
+  {
+    "_categoria": "tarifario",
+    "pregunta": "¿Cuál es el costo del carné universitario?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí el monto exacto del Tarifario de Trámites UNCP."
+  },
+  {
+    "_categoria": "tarifario",
+    "pregunta": "¿Cuánto cuesta el certificado de estudios?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí el monto exacto del Tarifario de Trámites UNCP."
+  },
+  {
+    "_categoria": "tarifario",
+    "pregunta": "¿Cuál es el costo de la constancia de ingreso a la UNCP?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí el monto exacto del Tarifario de Trámites UNCP."
+  },
+  {
+    "_categoria": "tarifario",
+    "pregunta": "¿Cuánto cuesta tramitar una carta de presentación?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí el monto exacto del Tarifario de Trámites UNCP."
+  },
+
+  {
+    "_categoria": "grados",
+    "pregunta": "¿Qué documentos se necesitan para el grado de bachiller?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí los requisitos del Reglamento de Grados y Títulos UNCP."
+  },
+  {
+    "_categoria": "grados",
+    "pregunta": "¿Cuáles son los requisitos para obtener el título profesional?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí los requisitos del Reglamento de Grados y Títulos UNCP."
+  },
+  {
+    "_categoria": "grados",
+    "pregunta": "¿Qué modalidades de titulación existen en la UNCP?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí las modalidades del Reglamento de Grados y Títulos."
+  },
+  {
+    "_categoria": "grados",
+    "pregunta": "¿Cuánto tiempo tengo para sustentar la tesis después de aprobar el proyecto?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí el plazo del Reglamento de Grados y Títulos UNCP."
+  },
+  {
+    "_categoria": "grados",
+    "pregunta": "¿Qué es el SIGT y cómo se usa para trámites de grados?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí la descripción del sistema SIGT de la UNCP."
+  },
+
+  {
+    "_categoria": "adesa",
+    "pregunta": "¿Cómo accedo al sistema ADESA para matrícula en línea?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí los pasos de acceso de la Guía del Sistema ADESA."
+  },
+  {
+    "_categoria": "adesa",
+    "pregunta": "¿Qué hago si el sistema ADESA no me permite matricularme?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí los pasos de solución de la Guía del Sistema ADESA."
+  },
+  {
+    "_categoria": "adesa",
+    "pregunta": "¿Cuál es la dirección web del sistema ADESA de la UNCP?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí la URL del sistema ADESA según la guía oficial."
+  },
+  {
+    "_categoria": "adesa",
+    "pregunta": "¿Cómo imprimo mi ficha de matrícula desde ADESA?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí los pasos de impresión de la Guía del Sistema ADESA."
+  },
+  {
+    "_categoria": "adesa",
+    "pregunta": "¿Cómo recupero mi contraseña del sistema ADESA?",
+    "respuesta_esperada": "REEMPLAZAR — Copia aquí el procedimiento de recuperación de la Guía ADESA."
+  }
+]

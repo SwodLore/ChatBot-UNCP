@@ -1,0 +1,66 @@
+name: chatbot-uncp
+
+services:
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: uncp_chromadb
+    restart: unless-stopped
+    networks:
+      - uncp_net
+    volumes:
+      - chroma_data:/data
+    expose:
+      - "8000"
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+
+  backend:
+    build: ./backend
+    container_name: uncp_backend
+    restart: unless-stopped
+    networks:
+      - uncp_net
+    ports:
+      - "8000:8000"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    volumes:
+      - ./backend:/app
+      - hf_cache:/root/.cache/huggingface
+    env_file:
+      - .env
+    environment:
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+    depends_on:
+      - chromadb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+
+  frontend:
+    build: ./frontend
+    container_name: uncp_frontend
+    restart: unless-stopped
+    networks:
+      - uncp_net
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  chroma_data:
+  hf_cache:
+
+networks:
+  uncp_net:
+    driver: bridge
