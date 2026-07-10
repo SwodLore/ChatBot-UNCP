@@ -7,8 +7,11 @@ class Settings(BaseSettings):
     LLM_PROVIDER: str = "gemini"
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-3.1-flash-lite-preview"
-    OLLAMA_BASE_URL: str = "http://ollama:11434"
-    OLLAMA_MODEL: str = "llama3.1:8b"
+    OLLAMA_BASE_URL: str = "http://host.docker.internal:11434"
+    OLLAMA_MODEL: str = "gemma3:12b"
+    # Ventana de contexto — el default de Ollama (4096) trunca el prompt RAG
+    # (8 chunks padre ≈ 3200 tokens + historial + system prompt)
+    OLLAMA_NUM_CTX: int = 8192
 
     # ChromaDB
     CHROMA_HOST: str = "chromadb"
@@ -33,6 +36,12 @@ class Settings(BaseSettings):
     RERANKER_MODEL: str = "BAAI/bge-reranker-v2-m3"
     # Chunks que pide a ChromaDB antes de rerankear — luego se reducen a TOP_K_RESULTS
     RERANKER_CANDIDATES: int = 20
+    # Umbral de relevancia sobre el mejor rerank_score. La escala es 0-1
+    # (sentence-transformers aplica sigmoide al logit del cross-encoder).
+    # Si ningún chunk lo supera, la pregunta no trata de los documentos indexados
+    # (saludo, ruido, tema ajeno) y se responde con un mensaje fijo sin llamar al LLM.
+    # Medido con bge-reranker-v2-m3: ruido puntúa ~0.0, preguntas reales > 0.3.
+    RERANKER_MIN_SCORE: float = 0.1
 
     # Parent-Child Chunking (tamaño en caracteres, no tokens; ~4 chars = 1 token)
     # HIJO — texto indexado en ChromaDB para retrieval preciso (~100 tokens)

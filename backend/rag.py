@@ -74,6 +74,10 @@ def _get_llm():
     return ChatOllama(
         model=settings.OLLAMA_MODEL,
         base_url=settings.OLLAMA_BASE_URL,
+        num_ctx=settings.OLLAMA_NUM_CTX,
+        # Mantiene el modelo cargado en memoria entre consultas
+        # (el default de 5 min lo descarga y la siguiente pregunta tarda ~10s extra)
+        keep_alive="30m",
     )
 
 
@@ -331,10 +335,52 @@ Te recomiendo consultar directamente con la oficina correspondiente."
 5. Sé conciso: responde lo que pregunta el estudiante sin información innecesaria.
 6. Al finalizar tu respuesta, añade la fuente entre corchetes:
    [Fuente: nombre_del_archivo | pág. X]
+7. Responde SIEMPRE a la última pregunta por sí misma. Si los mensajes anteriores \
+de la conversación no tienen relación con la pregunta actual, ignóralos por completo.
 
 CONTEXTO DE DOCUMENTOS UNCP:
 {context}
 """
+
+# Respuesta fija cuando la pregunta no trata de los documentos indexados
+# (saludos, ruido, temas ajenos). Evita llamar al LLM con contexto irrelevante.
+OFF_TOPIC_MSG = (
+    "Soy el asistente virtual de trámites de la UNCP 🎓. Puedo ayudarte con "
+    "**matrícula**, **calendario académico**, **costos y tarifas**, **grados y títulos** "
+    "y **reglamentos**. ¿Sobre qué trámite necesitas información?"
+)
+
+# Prefijos de respuestas sin información útil. Los intercambios que terminaron
+# así se excluyen del historial que ve el LLM: no aportan contexto y anclan
+# al modelo a repetir que no sabe.
+_FALLBACK_PREFIXES = (
+    "No tengo información sobre eso",
+    "Soy el asistente virtual de trámites de la UNCP",
+    "No hay documentos indexados aún",
+)
+
+
+def _clean_history(history: list[dict] | None) -> list[dict] | None:
+    """
+    Filtra del historial los intercambios donde el asistente respondió con un
+    fallback (junto con la pregunta del usuario que lo provocó — normalmente
+    ruido o tema ajeno). Así una racha de mensajes sin sentido no contamina
+    la reformulación ni el contexto conversacional de la siguiente pregunta real.
+    """
+    if not history:
+        return history
+
+    cleaned: list[dict] = []
+    for msg in history:
+        is_fallback = msg.get("role") == "assistant" and any(
+            msg.get("content", "").startswith(p) for p in _FALLBACK_PREFIXES
+        )
+        if is_fallback:
+            if cleaned and cleaned[-1].get("role") == "user":
+                cleaned.pop()
+            continue
+        cleaned.append(msg)
+    return cleaned
 
 
 def _build_context(chunks: list[dict]) -> str:
@@ -428,12 +474,11 @@ async def _reformulate_with_history(question: str, history: list[dict]) -> str:
     if not history or len(history) < 2:
         return question
 
-    # Heurística: preguntas cortas o con pronombres/conjunciones son sospechosas
-    seems_dependent = (
-        len(question.split()) <= 8
-        or bool(_CONTEXT_SIGNALS.search(question))
-    )
-    if not seems_dependent:
+    # Solo reformular ante señales EXPLÍCITAS de dependencia (pronombres/conectores).
+    # La longitud NO es criterio: casi toda pregunta real es corta, y reformular una
+    # pregunta ya autónoma la contamina con el tema del intercambio anterior
+    # (si ese intercambio fue ruido, la query resultante es basura).
+    if not _CONTEXT_SIGNALS.search(question):
         return question
 
     # Solo usar el último intercambio (user + assistant) para reformular
@@ -453,14 +498,34 @@ async def _reformulate_with_history(question: str, history: list[dict]) -> str:
     llm = _get_llm()
     try:
         result = await llm.ainvoke(prompt)
-        reformulated = _extract_text(result.content).strip()
-        if reformulated and len(reformulated) > 5:
+        reformulated = _extract_text(result.content).strip().strip('"').strip()
+        if _is_valid_reformulation(question, history_text, reformulated):
             logger.info(f"Query reformulada: '{question}' → '{reformulated[:80]}'")
             return reformulated
+        logger.info(f"Reformulación descartada por inválida: '{reformulated[:80]}'")
     except Exception as e:
         logger.warning(f"Reformulación falló, usando query original: {e}")
 
     return question
+
+
+def _is_valid_reformulation(question: str, history_text: str, reformulated: str) -> bool:
+    """
+    Acepta la reformulación solo si parece una pregunta real y reutiliza
+    vocabulario de la conversación. Si el LLM inventó un tema nuevo o devolvió
+    una explicación en vez de una pregunta, es más seguro usar la query original.
+    """
+    if not reformulated or len(reformulated) < 6:
+        return False
+    # Una pregunta autónoma cabe en una línea; saltos de línea o textos muy
+    # largos indican que el LLM respondió con explicación o listado
+    if "\n" in reformulated or len(reformulated) > 300:
+        return False
+    # Debe compartir al menos un término de contenido con la pregunta o el
+    # historial que la originó
+    source_words = set(re.findall(r"\w{4,}", f"{question} {history_text}".lower()))
+    new_words = set(re.findall(r"\w{4,}", reformulated.lower()))
+    return bool(source_words & new_words)
 
 
 # ─── Stream RAG ───────────────────────────────────────────────────────────────
@@ -484,6 +549,10 @@ async def stream_rag_response(
         data: {"type": "done"}
     """
 
+    # 0. Excluir del historial los intercambios que terminaron en fallback
+    #    (ruido, small-talk, "no tengo información") — no aportan contexto
+    history = _clean_history(history)
+
     # 1. Reformular la query si hay historial (mejora el retrieval semántico)
     effective_query = (
         await _reformulate_with_history(question, history)
@@ -506,7 +575,23 @@ async def stream_rag_response(
         yield _sse({"type": "done"})
         return
 
-    # 3. Construir prompt: contexto recuperado + historial + pregunta actual
+    # 3b. Umbral de relevancia: si ni el mejor chunk supera el mínimo, la
+    #     pregunta no trata de los documentos indexados (saludo, ruido, tema
+    #     ajeno). Responder mensaje fijo sin arriesgar una alucinación del LLM.
+    best_score = max(
+        (c["rerank_score"] for c in chunks if "rerank_score" in c),
+        default=None,
+    )
+    if best_score is not None and best_score < settings.RERANKER_MIN_SCORE:
+        logger.info(
+            f"Query fuera de dominio (mejor rerank_score {best_score} < "
+            f"{settings.RERANKER_MIN_SCORE}): '{question[:60]}'"
+        )
+        yield _sse({"type": "delta", "content": OFF_TOPIC_MSG})
+        yield _sse({"type": "done"})
+        return
+
+    # 4. Construir prompt: contexto recuperado + historial + pregunta actual
     messages = _build_messages_with_history(question, chunks, history)
 
     # 4. Llamar al LLM y hacer streaming token a token

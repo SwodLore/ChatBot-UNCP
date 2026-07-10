@@ -128,37 +128,31 @@ export function AdminPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
 
-      {/* ── Header ── */}
-      <header className="bg-uncp-green text-white px-4 sm:px-6 py-4 shadow-lg">
-        <div className="max-w-3xl mx-auto flex items-center gap-3">
-          <div className="w-10 h-10 bg-uncp-dark rounded-full overflow-hidden ring-2 ring-uncp-gold/50 flex-shrink-0">
-            <img src="/uncp-logo.png" alt="UNCP" className="w-full h-full object-contain" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-base sm:text-lg leading-tight">Administración — UNCP</h1>
-            <p className="text-green-200 text-[10px] sm:text-xs">Gestión de documentos del chatbot</p>
-          </div>
-          <Link
-            to="/history"
-            className="flex items-center gap-1.5 text-green-200 hover:text-uncp-gold text-xs sm:text-sm px-2 sm:px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0"
-          >
-            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-            </svg>
-            <span className="hidden sm:inline">Historial</span>
-          </Link>
+      {/* ── Header minimalista (misma temática que el chat) ── */}
+      <header className="bg-white border-b border-gray-100 px-3 sm:px-4 py-2.5 sticky top-0 z-10">
+        <div className="max-w-3xl mx-auto flex items-center gap-2">
           <Link
             to="/"
-            className="flex items-center gap-1.5 text-green-200 hover:text-uncp-gold text-xs sm:text-sm px-2 sm:px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0"
+            title="Volver al chat"
+            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors flex-shrink-0"
           >
-            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            <span className="hidden sm:inline">Volver al chat</span>
           </Link>
+          <div className="flex-1 min-w-0">
+            <h1 className="font-bold text-sm text-gray-800 leading-tight truncate">
+              Administrar documentos
+            </h1>
+            <p className="text-[10px] text-gray-400 truncate">
+              Base de conocimiento del Asistente Virtual UNCP
+            </p>
+          </div>
+          <div className="w-9 h-9 rounded-full bg-uncp-dark overflow-hidden ring-1 ring-uncp-gold/40 flex-shrink-0">
+            <img src="/uncp-logo.png" alt="UNCP" className="w-full h-full object-contain" />
+          </div>
         </div>
       </header>
 
@@ -367,7 +361,15 @@ function DocRow({ doc, isDeleting, isConfirming, onConfirm, onCancel, onDelete }
       <span className="text-2xl flex-shrink-0">{fileIcon(doc.file)}</span>
 
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm text-gray-800 truncate">{doc.file}</p>
+        <a
+          href={`/files/${encodeURIComponent(doc.file)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={`Abrir ${doc.file}`}
+          className="font-medium text-sm text-gray-800 truncate block hover:text-uncp-green hover:underline underline-offset-2 transition-colors"
+        >
+          {doc.file}
+        </a>
         <p className="text-xs text-gray-400 mt-0.5">
           <span className="font-medium text-gray-500">{doc.chunks}</span> chunks
           {' · '}

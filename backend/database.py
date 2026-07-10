@@ -6,6 +6,7 @@ Los mensajes se guardan en orden cronológico y se pueden recuperar por session_
 
 Archivo en disco: /app/chatbot.db  (montado en ./backend/chatbot.db en el host)
 """
+import json
 import sqlite3
 import threading
 from pathlib import Path
@@ -39,6 +40,12 @@ def init_db(path: str) -> None:
             CREATE INDEX IF NOT EXISTS idx_messages_session_time
                 ON messages(session_id, created_at);
         """)
+        # Migración: columna 'sources' (JSON) para persistir las fuentes de cada
+        # respuesta. Sin esto, los badges de fuente desaparecían al recargar (F5)
+        # porque solo vivían en el estado de React.
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(messages)")]
+        if "sources" not in cols:
+            conn.execute("ALTER TABLE messages ADD COLUMN sources TEXT")
 
 
 def _connect() -> sqlite3.Connection:
@@ -55,12 +62,18 @@ def ensure_session(session_id: str) -> None:
         conn.execute("INSERT OR IGNORE INTO sessions(id) VALUES (?)", (session_id,))
 
 
-def save_message(session_id: str, role: str, content: str) -> None:
-    """Guarda un mensaje (user o assistant) en la sesión."""
+def save_message(
+    session_id: str, role: str, content: str, sources: str | None = None
+) -> None:
+    """
+    Guarda un mensaje (user o assistant) en la sesión.
+    `sources` es un JSON string con las fuentes de la respuesta del asistente
+    (archivo, página, score) para que la UI las muestre también tras recargar.
+    """
     with _lock, _connect() as conn:
         conn.execute(
-            "INSERT INTO messages(session_id, role, content) VALUES (?, ?, ?)",
-            (session_id, role, content),
+            "INSERT INTO messages(session_id, role, content, sources) VALUES (?, ?, ?, ?)",
+            (session_id, role, content, sources),
         )
 
 
@@ -92,14 +105,24 @@ def get_session_messages(session_id: str, limit: int = 100) -> list[dict]:
     with _connect() as conn:
         rows = conn.execute(
             """
-            SELECT role, content FROM messages
+            SELECT role, content, sources FROM messages
             WHERE session_id = ?
             ORDER BY created_at ASC
             LIMIT ?
             """,
             (session_id, limit),
         ).fetchall()
-    return [{"role": r["role"], "content": r["content"]} for r in rows]
+
+    messages = []
+    for r in rows:
+        msg: dict = {"role": r["role"], "content": r["content"]}
+        if r["sources"]:
+            try:
+                msg["sources"] = json.loads(r["sources"])
+            except json.JSONDecodeError:
+                pass
+        messages.append(msg)
+    return messages
 
 
 def list_sessions(limit: int = 50) -> list[dict]:
@@ -114,10 +137,14 @@ def list_sessions(limit: int = 50) -> list[dict]:
                 s.id,
                 s.created_at,
                 COUNT(m.id)        AS message_count,
-                MAX(m.created_at)  AS last_message_at
+                MAX(m.created_at)  AS last_message_at,
+                (SELECT content FROM messages
+                 WHERE session_id = s.id AND role = 'user'
+                 ORDER BY created_at ASC LIMIT 1) AS title
             FROM sessions s
             LEFT JOIN messages m ON m.session_id = s.id
             GROUP BY s.id
+            HAVING COUNT(m.id) > 0
             ORDER BY COALESCE(MAX(m.created_at), s.created_at) DESC
             LIMIT ?
             """,

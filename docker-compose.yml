@@ -26,6 +26,10 @@ services:
     dns:
       - 8.8.8.8
       - 8.8.4.4
+    # Permite al backend alcanzar Ollama corriendo nativo en el host
+    # (los DNS externos de arriba no resuelven host.docker.internal)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./backend:/app
       - hf_cache:/root/.cache/huggingface

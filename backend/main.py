@@ -186,20 +186,31 @@ async def _stream_with_persistence(
     await asyncio.to_thread(save_message, session_id, "user", question)
 
     accumulated: list[str] = []
+    sources: list | None = None
     async for event_str in stream_rag_response(question, history):
         yield event_str
-        # Acumular tokens para guardar la respuesta completa al final
+        # Acumular tokens y fuentes para guardar la respuesta completa al final
         if event_str.startswith("data: "):
             try:
                 data = json.loads(event_str[6:].strip())
                 if data.get("type") == "delta":
                     accumulated.append(data.get("content", ""))
+                elif data.get("type") == "sources":
+                    sources = data.get("sources") or None
             except Exception:
                 pass
 
     full_response = "".join(accumulated)
     if full_response:
-        await asyncio.to_thread(save_message, session_id, "assistant", full_response)
+        # Las fuentes se guardan como JSON junto al mensaje para que la UI
+        # siga mostrando los badges (PDF, página, % confianza) tras un F5
+        await asyncio.to_thread(
+            save_message,
+            session_id,
+            "assistant",
+            full_response,
+            json.dumps(sources, ensure_ascii=False) if sources else None,
+        )
 
 
 @app.post(
